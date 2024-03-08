@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.*;
 @Component
 @Slf4j
 public class PhishingDatabaseFetcher {
@@ -39,7 +39,7 @@ public class PhishingDatabaseFetcher {
             while ((entry = ti.getNextEntry()) != null) {
                 rows.addAll(fileService.extractRows(entry, ti, ".txt", "\n"));
             }
-            redisService.saveUrls("domainsSet",rows);
+            redisService.saveUrls(DOMAIN_SET,rows);
             log.info("Domains loaded");
 
         } catch (IOException e) {
@@ -66,7 +66,7 @@ public class PhishingDatabaseFetcher {
             while ((entry = ti.getNextEntry()) != null) {
                 rows.addAll(fileService.extractRows(entry, ti, ".txt", "\n"));
             }
-            redisService.saveUrls("linksSet",rows);
+            redisService.saveUrls(LINK_SET,rows);
             log.info("Links loaded");
 
         } catch (IOException e) {

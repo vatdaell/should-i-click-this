@@ -18,4 +18,8 @@ public class RedisService {
             redisTemplate.opsForSet().add(key, urls.toArray(new String[0]));
         }
     }
+
+    public boolean urlContains(String key, String value){
+        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, value));
+    }
 }
