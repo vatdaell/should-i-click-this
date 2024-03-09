@@ -1,5 +1,6 @@
 package com.ansaf.shouldiclickthis.scheduled;
 
+import com.ansaf.shouldiclickthis.config.PhishingDbConfig;
 import com.ansaf.shouldiclickthis.exception.EmptyFileFileContentException;
 import com.ansaf.shouldiclickthis.service.FileService;
 import com.ansaf.shouldiclickthis.service.RedisService;
@@ -7,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -24,12 +26,15 @@ public class PhishingDatabaseFetcher {
     @Autowired
     private FileService fileService;
 
+    @Autowired
+    private PhishingDbConfig phishingDbConfig;
 
-    @Scheduled(fixedRate = 3600000) // 3600000 milliseconds = 1 hour
+
+    @Scheduled(fixedDelayString = "${phishing.db.domains.interval}")
     public void fetchDomains() {
         try {
             // Download the .tar.gz file
-            byte[] fileContent = fileService.loadFileContent("https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/ALL-phishing-domains.tar.gz");
+            byte[] fileContent = fileService.loadFileContent(phishingDbConfig.getDomains());
 
             TarArchiveInputStream ti = fileService.unzipFolder(fileContent);
 
@@ -46,16 +51,20 @@ public class PhishingDatabaseFetcher {
             log.error("Tar file was not unzipped");
         } catch (EmptyFileFileContentException e) {
             log.error("Tar file not loaded");
-        } catch (Exception e) {
+        }
+        catch (DataAccessException e) {
+            log.error("Issues inserting domains into Redis");
+        }
+        catch (Exception e) {
             log.error("Unknown error occured while loading phishing domains");
         }
     }
 
-    @Scheduled(fixedRate = 3600000) // 3600000 milliseconds = 1 hour
+    @Scheduled(fixedDelayString = "${phishing.db.links.interval}")
     public void fetchLinks() {
         try {
             // Download the .tar.gz file
-            byte[] fileContent = fileService.loadFileContent("https://raw.githubusercontent.com/mitchellkrogza/Phishing.Database/master/ALL-phishing-links.tar.gz");
+            byte[] fileContent = fileService.loadFileContent(phishingDbConfig.getLinks());
 
             TarArchiveInputStream ti = fileService.unzipFolder(fileContent);
 
@@ -73,13 +82,13 @@ public class PhishingDatabaseFetcher {
             log.error("Tar file was not unzipped");
         } catch (EmptyFileFileContentException e) {
             log.error("Tar file not loaded");
-        } catch (Exception e) {
+        }
+        catch (DataAccessException e) {
+            log.error("Issues inserting links into Redis");
+        }
+        catch (Exception e) {
             log.error("Unknown error occured while loading phishing domains");
         }
     }
-
-
-
-
 
 }
