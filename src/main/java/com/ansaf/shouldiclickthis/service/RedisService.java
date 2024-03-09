@@ -12,9 +12,8 @@ public class RedisService {
     private StringRedisTemplate redisTemplate;
 
     public void saveUrls(String key, List<String> urls) {
-        // Assuming `key` is the name of the Redis set
-        // and `urls` is the list of URLs to add to the set
         if (!urls.isEmpty()) {
+            redisTemplate.delete(key);
             redisTemplate.opsForSet().add(key, urls.toArray(new String[0]));
         }
     }
