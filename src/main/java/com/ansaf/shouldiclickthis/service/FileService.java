@@ -4,6 +4,7 @@ import com.ansaf.shouldiclickthis.exception.EmptyFileFileContentException;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.checkerframework.checker.units.qual.A;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,6 @@ import java.util.List;
 @Service
 public class FileService {
 
-    @Autowired
     private final RestTemplate restTemplate;
 
     @Autowired
