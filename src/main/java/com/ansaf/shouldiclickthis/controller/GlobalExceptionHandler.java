@@ -2,7 +2,6 @@ package com.ansaf.shouldiclickthis.controller;
 
 import com.ansaf.shouldiclickthis.model.UnsuccessfulResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;

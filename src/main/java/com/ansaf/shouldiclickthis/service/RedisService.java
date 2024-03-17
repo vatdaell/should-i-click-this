@@ -1,12 +1,11 @@
 package com.ansaf.shouldiclickthis.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Marker;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -15,16 +14,14 @@ public class RedisService {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
-    public void saveUrls(String key, List<String> urls) {
-        log.info("Starting insertion of Url at set: " + key);
-        if (urls != null && !urls.isEmpty()) {
-            redisTemplate.delete(key);
-            redisTemplate.opsForSet().add(key, urls.toArray(new String[0]));
-            log.info("Completed insertion of Url at set: " + key);
-        }
-        else{
-            log.warn("Empty list of urls provided to Redis");
-        }
+    public void saveUrlsInChunks(String key, List<String> urls, int chunkSize) {
+        List<List<String>> chunks = splitIntoChunks(urls, chunkSize);
+        redisTemplate.delete(key);
+        chunks.stream().filter(c -> !c.isEmpty()).forEach(chunk -> {
+                log.info("Starting insertion of Url at set: " + key);
+                redisTemplate.opsForSet().add(key, chunk.toArray(new String[0]));
+                log.info("Completed insertion of Url at set: " + key);
+        });
     }
 
     public boolean urlContains(String key, String value){
@@ -32,5 +29,16 @@ public class RedisService {
         boolean inSet = Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, value));
         log.info("Completed redis search");
         return inSet;
+    }
+
+    private <T> List<List<T>> splitIntoChunks(List<T> list, int chunks) {
+        List<List<T>> chunkedList = new ArrayList<>();
+        int chunkSize = (int)Math.ceil((double)list.size() / chunks);
+
+        for (int i = 0; i < list.size(); i += chunkSize) {
+            chunkedList.add(new ArrayList<>(list.subList(i, Math.min(list.size(), i + chunkSize))));
+        }
+
+        return chunkedList;
     }
 }

@@ -44,7 +44,7 @@ public class PhishingDatabaseFetcher {
             while ((entry = ti.getNextEntry()) != null) {
                 rows.addAll(fileService.extractRows(entry, ti, ".txt", "\n"));
             }
-            redisService.saveUrls(DOMAIN_SET,rows);
+            redisService.saveUrlsInChunks(DOMAIN_SET,rows,15);
             log.info("Domains loaded");
 
         } catch (IOException e) {
@@ -53,7 +53,7 @@ public class PhishingDatabaseFetcher {
             log.error("Tar file not loaded");
         }
         catch (DataAccessException e) {
-            log.error("Issues inserting domains into Redis");
+            log.error("Issues inserting domains into Redis: " + e.getMessage());
         }
         catch (Exception e) {
             log.error("Unknown error occured while loading phishing domains");
@@ -75,19 +75,19 @@ public class PhishingDatabaseFetcher {
             while ((entry = ti.getNextEntry()) != null) {
                 rows.addAll(fileService.extractRows(entry, ti, ".txt", "\n"));
             }
-            redisService.saveUrls(LINK_SET,rows);
+            redisService.saveUrlsInChunks(LINK_SET,rows,20);
             log.info("Links loaded");
 
         } catch (IOException e) {
             log.error("Tar file was not unzipped");
         } catch (EmptyFileFileContentException e) {
-            log.error("Tar file not loaded");
+            log.error("Tar file not loaded:" + e.getMessage());
         }
         catch (DataAccessException e) {
-            log.error("Issues inserting links into Redis");
+            log.error("Issues inserting links into Redis:" + e.getMessage());
         }
         catch (Exception e) {
-            log.error("Unknown error occured while loading phishing domains");
+            log.error("Unknown error occured while loading phishing domains:");
         }
     }
 
