@@ -45,18 +45,18 @@ public class PhishingDatabaseFetcher {
                 rows.addAll(fileService.extractRows(entry, ti, ".txt", "\n"));
             }
             redisService.saveUrlsInChunks(DOMAIN_SET,rows,15);
-            log.info("Domains loaded");
+            log.info("Domains loaded in set: {}", DOMAIN_SET);
 
         } catch (IOException e) {
-            log.error("Tar file was not unzipped");
+            log.error("Tar file was not unzipped: {}", e.getMessage());
         } catch (EmptyFileFileContentException e) {
-            log.error("Tar file not loaded");
+            log.error("Tar file not loaded: {}", e.getMessage());
         }
         catch (DataAccessException e) {
-            log.error("Issues inserting domains into Redis: " + e.getMessage());
+            log.error("Issues inserting domains into Redis: {}", e.getMessage());
         }
         catch (Exception e) {
-            log.error("Unknown error occured while loading phishing domains");
+            log.error("Unknown error occured while loading phishing domains: {}", e.getMessage());
         }
     }
 
@@ -76,18 +76,18 @@ public class PhishingDatabaseFetcher {
                 rows.addAll(fileService.extractRows(entry, ti, ".txt", "\n"));
             }
             redisService.saveUrlsInChunks(LINK_SET,rows,20);
-            log.info("Links loaded");
+            log.info("Links loaded in set: {}", LINK_SET);
 
         } catch (IOException e) {
-            log.error("Tar file was not unzipped");
+            log.error("Tar file was not unzipped: {}", e.getMessage());
         } catch (EmptyFileFileContentException e) {
-            log.error("Tar file not loaded:" + e.getMessage());
+            log.error("Tar file not loaded: {}", e.getMessage());
         }
         catch (DataAccessException e) {
-            log.error("Issues inserting links into Redis:" + e.getMessage());
+            log.error("Issues inserting links into Redis: {}", e.getMessage());
         }
         catch (Exception e) {
-            log.error("Unknown error occured while loading phishing domains:");
+            log.error("Unknown error occured while loading phishing domains: {}", e.getMessage());
         }
     }
 
