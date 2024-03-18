@@ -1,6 +1,8 @@
 package com.ansaf.shouldiclickthis.controller;
 
+import com.ansaf.shouldiclickthis.exception.TooManyRequestsException;
 import com.ansaf.shouldiclickthis.model.SuccessResponse;
+import com.ansaf.shouldiclickthis.service.RateLimiterService;
 import com.ansaf.shouldiclickthis.service.RedisService;
 import com.ansaf.shouldiclickthis.service.TimeService;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +29,13 @@ public class ApiController {
     @Autowired
     private TimeService timeService;
 
+    @Autowired
+    private RateLimiterService rateLimiterService;
 
     @PostMapping("/domain")
-    public SuccessResponse domainSafety(@RequestParam(DOMAIN_PARAM) String domain){
+    public SuccessResponse domainSafety(@RequestParam(DOMAIN_PARAM) String domain) throws TooManyRequestsException {
+        rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1, "Too many requests on /api/domain");
+
         log.info("Domain verification request started");
         boolean status = redisService.urlContains(DOMAIN_SET, domain);
         LocalDateTime currentTime = timeService.getNowTime();
@@ -43,9 +49,13 @@ public class ApiController {
     }
 
     @PostMapping("/link")
-    public SuccessResponse linkSafety(@RequestParam(LINK_PARAM) String link){
+    public SuccessResponse linkSafety(@RequestParam(LINK_PARAM) String link) throws TooManyRequestsException {
+        rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1, "Too many requests on /api/link");
+
+        log.info("Link verification request started");
         boolean status = redisService.urlContains(LINK_SET, link);
         LocalDateTime currentTime = timeService.getNowTime();
+        log.info("Link verification request completed");
         return SuccessResponse
                 .builder()
                 .link(link)
