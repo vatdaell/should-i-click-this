@@ -1,5 +1,6 @@
 package com.ansaf.shouldiclickthis.controller;
 
+import com.ansaf.shouldiclickthis.exception.TooManyRequestsException;
 import com.ansaf.shouldiclickthis.model.SuccessResponse;
 import com.ansaf.shouldiclickthis.service.RedisService;
 import com.ansaf.shouldiclickthis.service.TimeService;
@@ -32,7 +33,7 @@ public class ApiControllerTest {
     private final String input = "domain.com";
 
     @Test
-    void domainControllerResponseIsStatusSuccess(){
+    void domainControllerResponseIsStatusSuccess() throws Exception {
         given(redisService.urlContains(DOMAIN_SET, input)).willReturn(true);
         given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
 
@@ -48,7 +49,7 @@ public class ApiControllerTest {
     }
 
     @Test
-    void domainControllerResponseIsNotStatusSuccess(){
+    void domainControllerResponseIsNotStatusSuccess() throws Exception {
         given(redisService.urlContains(DOMAIN_SET, input)).willReturn(false);
         given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
 
@@ -64,7 +65,7 @@ public class ApiControllerTest {
     }
 
     @Test
-    void linkControllerResponseIsStatusSuccess(){
+    void linkControllerResponseIsStatusSuccess() throws TooManyRequestsException {
         given(redisService.urlContains(LINK_SET, input)).willReturn(true);
         given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
 
@@ -80,7 +81,7 @@ public class ApiControllerTest {
     }
 
     @Test
-    void linkControllerResponseIsNotStatusSuccess(){
+    void linkControllerResponseIsNotStatusSuccess() throws TooManyRequestsException {
         given(redisService.urlContains(LINK_SET, input)).willReturn(false);
         given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
 
