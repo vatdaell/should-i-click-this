@@ -1,9 +1,12 @@
 package com.ansaf.shouldiclickthis.service;
 
+import com.ansaf.shouldiclickthis.config.RateLimiterConfig;
+import com.ansaf.shouldiclickthis.exception.TooManyRequestsException;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -13,9 +16,17 @@ import java.time.Duration;
 public class RateLimiterService {
 
     private final Bucket phishingDbBucket;
+    private final RateLimiterConfig rateLimiterConfig;
 
-    public RateLimiterService() {
-        this.phishingDbBucket =  createBucket(20,20,1);
+    @Autowired
+    public RateLimiterService(RateLimiterConfig rateLimiterConfig) {
+        this.rateLimiterConfig = rateLimiterConfig;
+        this.phishingDbBucket =  createBucket(rateLimiterConfig.getCapacity(), rateLimiterConfig.getRefill(), rateLimiterConfig.getToken());
+    }
+
+    public void runRateLimit(Bucket bucket, int token,String message) throws TooManyRequestsException {
+        if(!bucket.tryConsume(token))
+            throw new TooManyRequestsException(message);
     }
 
     private Bucket createBucket(int capacity, int refill, int durationInMinutes){
