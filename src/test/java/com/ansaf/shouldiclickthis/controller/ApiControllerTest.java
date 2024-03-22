@@ -2,19 +2,27 @@ package com.ansaf.shouldiclickthis.controller;
 
 import com.ansaf.shouldiclickthis.exception.TooManyRequestsException;
 import com.ansaf.shouldiclickthis.model.SuccessResponse;
+import com.ansaf.shouldiclickthis.service.RateLimiterService;
 import com.ansaf.shouldiclickthis.service.RedisService;
 import com.ansaf.shouldiclickthis.service.TimeService;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Refill;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_SET;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 
@@ -27,6 +35,9 @@ public class ApiControllerTest {
     @Mock
     private TimeService timeService;
 
+    @Mock
+    private RateLimiterService rateLimiterService;
+
     @InjectMocks
     private ApiController apiController;
 
@@ -36,6 +47,11 @@ public class ApiControllerTest {
     void domainControllerResponseIsStatusSuccess() throws Exception {
         given(redisService.urlContains(DOMAIN_SET, input)).willReturn(true);
         given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
+        given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
+                .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
+                .build());
+        doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
+
 
         SuccessResponse expected = SuccessResponse
                                     .builder()
@@ -52,6 +68,10 @@ public class ApiControllerTest {
     void domainControllerResponseIsNotStatusSuccess() throws Exception {
         given(redisService.urlContains(DOMAIN_SET, input)).willReturn(false);
         given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
+        given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
+                .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
+                .build());
+        doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
 
         SuccessResponse expected = SuccessResponse
                 .builder()
@@ -68,6 +88,10 @@ public class ApiControllerTest {
     void linkControllerResponseIsStatusSuccess() throws TooManyRequestsException {
         given(redisService.urlContains(LINK_SET, input)).willReturn(true);
         given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
+        given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
+                .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
+                .build());
+        doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
 
         SuccessResponse expected = SuccessResponse
                 .builder()
@@ -84,6 +108,10 @@ public class ApiControllerTest {
     void linkControllerResponseIsNotStatusSuccess() throws TooManyRequestsException {
         given(redisService.urlContains(LINK_SET, input)).willReturn(false);
         given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
+        given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
+                .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
+                .build());
+        doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
 
         SuccessResponse expected = SuccessResponse
                 .builder()
