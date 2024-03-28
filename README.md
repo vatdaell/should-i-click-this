@@ -4,26 +4,26 @@
 
 * Java 17 or newer
 * Maven 3.9.5 or newer
-* Redis instance
+* KeyDB instance
 * Docker (optional)
 
 ## Setup
 
-### Redis
+### KeyDB
 
-#### Redis on Docker
+#### KeyDB on Docker
 
-There is a docker-compose.yml file that can be used to host a Redis server locally. Run the following command in the root directory of the project.
+There is a docker-compose.yml file that can be used to host a KeyDB server locally. Run the following command in the root directory of the project.
 
 ```
 $ docker-compose up
 ```
 
-You'll have a Redis instance up locally and running on port 6379
+You'll have a KeyDB instance up locally and running on port 6379
 
-#### Other Redis instances
+#### Other KeyDB instances
 
-If you have a redis instace setup any other way or have a redis instance located externally. You'll need to update the `spring.data.redis.url` variable in application-local.yml to the redis instance url.
+If you have a KeyDB instace setup any other way or have a KeyDB instance located externally. You'll need to update the `spring.data.KeyDB.url` variable in application-local.yml to the KeyDB instance url.
 
 ## Running the application
 
