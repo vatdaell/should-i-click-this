@@ -12,12 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.DOMAIN_PARAM;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.LINK_PARAM;
-import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_SET;
-import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.*;
 
 @RestController
 @RequestMapping(path = "${apiPrefix}")
@@ -38,13 +35,15 @@ public class ApiController {
 
         log.info("Domain verification request started");
         boolean status = redisService.urlContains(DOMAIN_SET, domain);
-        LocalDateTime currentTime = timeService.getNowTime();
+        String lastUpdated = redisService.getString(DOMAIN_UPDATED);
+        String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
         log.info("Domain verification request completed");
         return SuccessResponse
                 .builder()
                 .domain(domain)
                 .status(status)
                 .responseTime(currentTime)
+                .lastUpdated(lastUpdated)
                 .build();
     }
 
@@ -54,13 +53,17 @@ public class ApiController {
 
         log.info("Link verification request started");
         boolean status = redisService.urlContains(LINK_SET, link);
-        LocalDateTime currentTime = timeService.getNowTime();
+        String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
+        String lastUpdated = redisService.getString(LINK_UPDATED);
         log.info("Link verification request completed");
         return SuccessResponse
                 .builder()
                 .link(link)
                 .status(status)
                 .responseTime(currentTime)
+                .lastUpdated(lastUpdated)
                 .build();
     }
+
+
 }

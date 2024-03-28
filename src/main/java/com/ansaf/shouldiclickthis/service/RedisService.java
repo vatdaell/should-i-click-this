@@ -45,4 +45,12 @@ public class RedisService {
 
         return chunkedList;
     }
+
+    public void setString(String key, String value){
+        redisTemplate.opsForValue().set(key, value);
+    }
+
+    public String getString(String key){
+        return redisTemplate.opsForValue().get(key);
+    }
 }

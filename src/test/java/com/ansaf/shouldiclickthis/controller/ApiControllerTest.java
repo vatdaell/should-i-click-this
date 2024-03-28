@@ -19,8 +19,7 @@ import java.time.LocalDateTime;
 
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_SET;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.util.AssertionErrors.assertEquals;
@@ -43,22 +42,30 @@ public class ApiControllerTest {
 
     private final String input = "domain.com";
 
+    private final LocalDateTime localDateTime = LocalDateTime.of(2024, 1, 1, 1, 1,1);
+
+    private final String localDateTimeString = "2024-01-01 01:01:01";
+
+
     @Test
     void domainControllerResponseIsStatusSuccess() throws Exception {
         given(redisService.urlContains(DOMAIN_SET, input)).willReturn(true);
-        given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
+        given(timeService.getNowTime()).willReturn(localDateTime);
+        given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
                 .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
                 .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
+        given(redisService.getString(anyString())).willReturn(localDateTimeString);
 
 
         SuccessResponse expected = SuccessResponse
-                                    .builder()
-                                    .domain(input)
-                                    .status(true)
-                                    .responseTime(LocalDateTime.MAX)
-                                    .build();
+                .builder()
+                .domain(input)
+                .status(true)
+                .responseTime(localDateTimeString)
+                .lastUpdated(localDateTimeString)
+                .build();
         SuccessResponse actual = apiController.domainSafety(input);
 
         assertSuccessResponse(expected, actual);
@@ -67,17 +74,20 @@ public class ApiControllerTest {
     @Test
     void domainControllerResponseIsNotStatusSuccess() throws Exception {
         given(redisService.urlContains(DOMAIN_SET, input)).willReturn(false);
-        given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
+        given(timeService.getNowTime()).willReturn(localDateTime);
+        given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
                 .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
                 .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
+        given(redisService.getString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
                 .builder()
                 .domain(input)
                 .status(false)
-                .responseTime(LocalDateTime.MAX)
+                .responseTime(localDateTimeString)
+                .lastUpdated(localDateTimeString)
                 .build();
         SuccessResponse actual = apiController.domainSafety(input);
 
@@ -87,17 +97,20 @@ public class ApiControllerTest {
     @Test
     void linkControllerResponseIsStatusSuccess() throws TooManyRequestsException {
         given(redisService.urlContains(LINK_SET, input)).willReturn(true);
-        given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
+        given(timeService.getNowTime()).willReturn(localDateTime);
+        given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
                 .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
                 .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
+        given(redisService.getString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
                 .builder()
                 .link(input)
                 .status(true)
-                .responseTime(LocalDateTime.MAX)
+                .responseTime(localDateTimeString)
+                .lastUpdated(localDateTimeString)
                 .build();
         SuccessResponse actual = apiController.linkSafety(input);
 
@@ -107,17 +120,20 @@ public class ApiControllerTest {
     @Test
     void linkControllerResponseIsNotStatusSuccess() throws TooManyRequestsException {
         given(redisService.urlContains(LINK_SET, input)).willReturn(false);
-        given(timeService.getNowTime()).willReturn(LocalDateTime.MAX);
+        given(timeService.getNowTime()).willReturn(localDateTime);
+        given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
                 .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
                 .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
+        given(redisService.getString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
                 .builder()
                 .link(input)
                 .status(false)
-                .responseTime(LocalDateTime.MAX)
+                .responseTime(localDateTimeString)
+                .lastUpdated(localDateTimeString)
                 .build();
         SuccessResponse actual = apiController.linkSafety(input);
 
@@ -129,5 +145,7 @@ public class ApiControllerTest {
         assertEquals("Status is not the same", expected.isStatus(), actual.isStatus());
         assertEquals("Response time is not the same", expected.getResponseTime(), actual.getResponseTime());
         assertEquals("Link is not the same", expected.getLink(), actual.getLink());
+        assertEquals("LastUpdated is not the same", expected.getLastUpdated(), actual.getLastUpdated());
+
     }
 }
