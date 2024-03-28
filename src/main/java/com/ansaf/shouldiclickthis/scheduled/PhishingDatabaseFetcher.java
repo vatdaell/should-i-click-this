@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.*;
 @Component
 @Slf4j
@@ -99,7 +100,7 @@ public class PhishingDatabaseFetcher {
 
     private void setUpdatedTime(String key){
         String currentTimeInString = timeService.getIsoFormatString(timeService.getNowTime());
-        redisService.updateTime(key, currentTimeInString);
+        redisService.setString(key, currentTimeInString);
     }
 
 }

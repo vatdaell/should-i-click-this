@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +46,11 @@ public class RedisService {
         return chunkedList;
     }
 
-    public void updateTime(String key, String localDateTime){
-        redisTemplate.opsForValue().set(key, localDateTime);
+    public void setString(String key, String value){
+        redisTemplate.opsForValue().set(key, value);
+    }
+
+    public String getString(String key){
+        return redisTemplate.opsForValue().get(key);
     }
 }
