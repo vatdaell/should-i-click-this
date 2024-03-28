@@ -4,6 +4,7 @@ import com.ansaf.shouldiclickthis.config.PhishingDbConfig;
 import com.ansaf.shouldiclickthis.exception.EmptyFileFileContentException;
 import com.ansaf.shouldiclickthis.service.FileService;
 import com.ansaf.shouldiclickthis.service.RedisService;
+import com.ansaf.shouldiclickthis.service.TimeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -29,6 +30,9 @@ public class PhishingDatabaseFetcher {
     @Autowired
     private PhishingDbConfig phishingDbConfig;
 
+    @Autowired
+    private TimeService timeService;
+
 
     @Scheduled(fixedDelayString = "${phishing.db.domains.interval}")
     public void fetchDomains() {
@@ -46,6 +50,7 @@ public class PhishingDatabaseFetcher {
             }
             redisService.saveUrlsInChunks(DOMAIN_SET,rows,15);
             log.info("Domains loaded in set: {}", DOMAIN_SET);
+            setUpdatedTime(DOMAIN_UPDATED);
 
         } catch (IOException e) {
             log.error("Tar file was not unzipped: {}", e.getMessage());
@@ -77,6 +82,7 @@ public class PhishingDatabaseFetcher {
             }
             redisService.saveUrlsInChunks(LINK_SET,rows,20);
             log.info("Links loaded in set: {}", LINK_SET);
+            setUpdatedTime(LINK_UPDATED);
 
         } catch (IOException e) {
             log.error("Tar file was not unzipped: {}", e.getMessage());
@@ -89,6 +95,11 @@ public class PhishingDatabaseFetcher {
         catch (Exception e) {
             log.error("Unknown error occured while loading phishing domains: {}", e.getMessage());
         }
+    }
+
+    private void setUpdatedTime(String key){
+        String currentTimeInString = timeService.getIsoFormatString(timeService.getNowTime());
+        redisService.updateTime(key, currentTimeInString);
     }
 
 }
