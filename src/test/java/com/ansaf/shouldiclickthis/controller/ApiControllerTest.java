@@ -26,7 +26,6 @@ import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 
 @ExtendWith(MockitoExtension.class)
-
 public class ApiControllerTest {
     @Mock
     private RedisService redisService;
