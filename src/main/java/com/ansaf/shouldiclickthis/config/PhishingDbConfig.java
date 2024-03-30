@@ -12,4 +12,6 @@ public class PhishingDbConfig {
     private String domains;
     private int linksInterval;
     private int domainsInterval;
+    private int linksSplit;
+    private int domainsSplit;
 }
