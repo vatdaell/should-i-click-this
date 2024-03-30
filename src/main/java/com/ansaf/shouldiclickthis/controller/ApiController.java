@@ -3,8 +3,12 @@ package com.ansaf.shouldiclickthis.controller;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.DOMAIN_PARAM;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.LINK_PARAM;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.URL_PARAM;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_UPDATED;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_UPDATED;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_UPDATED;
 
 import com.ansaf.shouldiclickthis.exception.TooManyRequestsException;
 import com.ansaf.shouldiclickthis.model.SuccessResponse;
@@ -30,11 +34,6 @@ public class ApiController {
 
     @Autowired
     private RateLimiterService rateLimiterService;
-
-    private static final String OPENPHISH_SET = "openPhishSet";
-    private static final String DOMAIN_SET = "domainSet";
-    private static final String LINK_SET = "linkSet";
-    private static final String OPENPHISH_UPDATED = "openPhishUpdated";
 
     @PostMapping("/domain")
     public SuccessResponse domainSafety(@RequestParam(DOMAIN_PARAM) String domain) throws TooManyRequestsException {
