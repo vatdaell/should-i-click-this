@@ -57,7 +57,6 @@ public class ApiControllerTest {
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
         given(redisService.getString(anyString())).willReturn(localDateTimeString);
 
-
         SuccessResponse expected = SuccessResponse
                 .builder()
                 .url(input)
