@@ -1,5 +1,15 @@
 package com.ansaf.shouldiclickthis.controller;
 
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_SET;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.springframework.test.util.AssertionErrors.assertEquals;
+
 import com.ansaf.shouldiclickthis.exception.TooManyRequestsException;
 import com.ansaf.shouldiclickthis.model.SuccessResponse;
 import com.ansaf.shouldiclickthis.service.RateLimiterService;
@@ -8,20 +18,13 @@ import com.ansaf.shouldiclickthis.service.TimeService;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-
-import static com.ansaf.shouldiclickthis.constant.RedisConstant.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.doNothing;
-import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -182,6 +185,78 @@ public class ApiControllerTest {
                 .build();
 
         SuccessResponse actual = apiController.openPhishSafety(input);
+
+        assertSuccessResponse(expected, actual);
+    }
+
+    @Test
+    void consolidatedControllerResponseIsStatusFailure() throws TooManyRequestsException {
+        given(redisService.urlContains(anyString(), eq(input))).willReturn(false);
+        given(timeService.getNowTime()).willReturn(localDateTime);
+        given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
+        given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
+            .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
+            .build());
+        doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
+        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+
+        SuccessResponse expected = SuccessResponse
+            .builder()
+            .url(input)
+            .status(false)
+            .responseTime(localDateTimeString)
+            .lastUpdated(localDateTimeString)
+            .build();
+
+        SuccessResponse actual = apiController.consolidated(input);
+
+        assertSuccessResponse(expected, actual);
+    }
+
+    @Test
+    void consolidatedControllerResponseIsOneTrue() throws TooManyRequestsException {
+        given(redisService.urlContains(anyString(), eq(input))).willReturn(true, false, false);
+        given(timeService.getNowTime()).willReturn(localDateTime);
+        given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
+        given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
+            .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
+            .build());
+        doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
+        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+
+        SuccessResponse expected = SuccessResponse
+            .builder()
+            .url(input)
+            .status(true)
+            .responseTime(localDateTimeString)
+            .lastUpdated(localDateTimeString)
+            .build();
+
+        SuccessResponse actual = apiController.consolidated(input);
+
+        assertSuccessResponse(expected, actual);
+    }
+
+    @Test
+    void consolidatedControllerResponseIsStatusTrue() throws TooManyRequestsException {
+        given(redisService.urlContains(anyString(), eq(input))).willReturn(true);
+        given(timeService.getNowTime()).willReturn(localDateTime);
+        given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
+        given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
+            .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
+            .build());
+        doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
+        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+
+        SuccessResponse expected = SuccessResponse
+            .builder()
+            .url(input)
+            .status(true)
+            .responseTime(localDateTimeString)
+            .lastUpdated(localDateTimeString)
+            .build();
+
+        SuccessResponse actual = apiController.consolidated(input);
 
         assertSuccessResponse(expected, actual);
     }
