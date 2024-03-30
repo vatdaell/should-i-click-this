@@ -10,8 +10,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 @Data
 @Builder
 public class SuccessResponse {
-    private String link;
-    private String domain;
+    private String url;
     private boolean status;
     private String responseTime;
     private String lastUpdated;

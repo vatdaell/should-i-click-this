@@ -1,7 +1,11 @@
 package com.ansaf.shouldiclickthis.service;
 
 import com.ansaf.shouldiclickthis.exception.EmptyFileFileContentException;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
 import static org.assertj.core.api.Fail.fail;
@@ -96,6 +101,89 @@ public class FileServiceTest {
 
         assertThrows(EmptyFileFileContentException.class, () -> fileService.loadFileContent(url));
 
+    }
+
+    @Test
+    void testExtractRowsFromZip() throws IOException {
+        ByteArrayOutputStream byteOutStream = getByteArrayOutputStream("test.txt", "url1.com\nurl2.com\nurl3.com");
+
+        try (ByteArrayInputStream bin = new ByteArrayInputStream(byteOutStream.toByteArray());
+             TarArchiveInputStream tin = new TarArchiveInputStream(new GzipCompressorInputStream(bin))) {
+
+            TarArchiveEntry entry = tin.getNextEntry();
+            List<String> urls = fileService.extractRowsFromZip(entry, tin, ".txt", "\n");
+
+            assertEquals("Should extract three URLs.",3, urls.size());
+            assertEquals("First URL should match.","url1.com", urls.get(0));
+            assertEquals("Second URL should match.", "url2.com", urls.get(1));
+            assertEquals("Third URL should match.", "url3.com", urls.get(2));
+        }
+    }
+
+    @Test
+    void testExtractRowsFromZipWithDifferentDelimeter() throws IOException {
+        ByteArrayOutputStream byteOutStream = getByteArrayOutputStream("test.txt", "url1.com,url2.com,url3.com");
+
+        try (ByteArrayInputStream bin = new ByteArrayInputStream(byteOutStream.toByteArray());
+             TarArchiveInputStream tin = new TarArchiveInputStream(new GzipCompressorInputStream(bin))) {
+
+            TarArchiveEntry entry = tin.getNextEntry();
+            List<String> urls = fileService.extractRowsFromZip(entry, tin, ".txt", ",");
+
+            assertEquals("Should extract three URLs.",3, urls.size());
+            assertEquals("First URL should match.","url1.com", urls.get(0));
+            assertEquals("Second URL should match.", "url2.com", urls.get(1));
+            assertEquals("Third URL should match.", "url3.com", urls.get(2));
+        }
+    }
+
+    @Test
+    void testExtractRowsFromZipWithDifferentFilename() throws IOException {
+        ByteArrayOutputStream byteOutStream = getByteArrayOutputStream("test.file", "url1.com,url2.com,url3.com");
+        try (ByteArrayInputStream bin = new ByteArrayInputStream(byteOutStream.toByteArray());
+             TarArchiveInputStream tin = new TarArchiveInputStream(new GzipCompressorInputStream(bin))) {
+
+            TarArchiveEntry entry = tin.getNextEntry();
+            List<String> urls = fileService.extractRowsFromZip(entry, tin, ".file", ",");
+
+            assertEquals("Should extract three URLs.",3, urls.size());
+            assertEquals("First URL should match.","url1.com", urls.get(0));
+            assertEquals("Second URL should match.", "url2.com", urls.get(1));
+            assertEquals("Third URL should match.", "url3.com", urls.get(2));
+        }
+    }
+
+    @Test
+    void testExtractRows() {
+        byte[] file = "url1.com\nurl2.com\nurl3.com".getBytes(StandardCharsets.UTF_8);
+        List<String> urls = fileService.extractRowFromString(file, "\n");
+        assertEquals("Should extract three URLs.",3, urls.size());
+        assertEquals("First URL should match.","url1.com", urls.get(0));
+        assertEquals("Second URL should match.", "url2.com", urls.get(1));
+        assertEquals("Third URL should match.", "url3.com", urls.get(2));
+    }
+
+    @Test
+    void testExtractRowsWithDifferentDelimiter() {
+        byte[] file = "url1.com,url2.com,url3.com".getBytes(StandardCharsets.UTF_8);
+        List<String> urls = fileService.extractRowFromString(file, ",");
+        assertEquals("Should extract three URLs.",3, urls.size());
+        assertEquals("First URL should match.","url1.com", urls.get(0));
+        assertEquals("Second URL should match.", "url2.com", urls.get(1));
+        assertEquals("Third URL should match.", "url3.com", urls.get(2));
+    }
+
+    private ByteArrayOutputStream getByteArrayOutputStream(String filename, String input) throws IOException {
+        ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
+        try (TarArchiveOutputStream tarOut = new TarArchiveOutputStream(new GzipCompressorOutputStream(byteOutStream))) {
+            TarArchiveEntry entry = new TarArchiveEntry(filename);
+            byte[] data = input.getBytes(StandardCharsets.UTF_8);
+            entry.setSize(data.length);
+            tarOut.putArchiveEntry(entry);
+            tarOut.write(data);
+            tarOut.closeArchiveEntry();
+        }
+        return byteOutStream;
     }
 
 }
