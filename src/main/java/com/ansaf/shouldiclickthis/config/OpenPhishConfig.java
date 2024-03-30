@@ -8,7 +8,8 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "openphish")
 @Data
 public class OpenPhishConfig {
-    private int interval;
-    private int split;
-    private String url;
+
+  private int interval;
+  private int split;
+  private String url;
 }
