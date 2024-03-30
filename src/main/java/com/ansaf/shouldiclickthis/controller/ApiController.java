@@ -40,7 +40,7 @@ public class ApiController {
         log.info("Domain verification request completed");
         return SuccessResponse
                 .builder()
-                .domain(domain)
+                .url(domain)
                 .status(status)
                 .responseTime(currentTime)
                 .lastUpdated(lastUpdated)
@@ -58,7 +58,24 @@ public class ApiController {
         log.info("Link verification request completed");
         return SuccessResponse
                 .builder()
-                .link(link)
+                .url(link)
+                .status(status)
+                .responseTime(currentTime)
+                .lastUpdated(lastUpdated)
+                .build();
+    }
+
+    @PostMapping("/openphish")
+    public SuccessResponse openPhishSafety(@RequestParam(LINK_PARAM) String link) throws TooManyRequestsException {
+        rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1, "Too many requests on /api/openphish");
+        log.info("OpenPhish verification request started");
+        boolean status = redisService.urlContains(OPENPHISH_SET, link);
+        String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
+        String lastUpdated = redisService.getString(OPENPHISH_UPDATED);
+
+        return SuccessResponse
+                .builder()
+                .url(link)
                 .status(status)
                 .responseTime(currentTime)
                 .lastUpdated(lastUpdated)
