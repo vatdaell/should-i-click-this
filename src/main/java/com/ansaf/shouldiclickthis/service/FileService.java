@@ -1,15 +1,6 @@
 package com.ansaf.shouldiclickthis.service;
 
 import com.ansaf.shouldiclickthis.exception.EmptyFileFileContentException;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
-import org.springframework.web.client.RestTemplate;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -18,16 +9,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+import org.springframework.http.HttpMethod;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
+import org.springframework.web.client.RestTemplate;
 
 @Service
+@RequiredArgsConstructor
 public class FileService {
 
     private final RestTemplate restTemplate;
-
-    @Autowired
-    public FileService(RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-    }
 
     public TarArchiveInputStream unzipFolder(byte[] fileContent) throws Exception{
         InputStream fi = new ByteArrayInputStream(fileContent);
