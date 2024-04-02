@@ -2,16 +2,17 @@ package com.ansaf.shouldiclickthis.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class RedisService {
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+
+    private final StringRedisTemplate redisTemplate;
 
     public void saveUrlsInChunks(String key, List<String> urls, int chunkSize) {
         List<List<String>> chunks = splitIntoChunks(urls, chunkSize);
