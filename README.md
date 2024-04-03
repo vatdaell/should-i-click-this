@@ -23,7 +23,7 @@ You'll have a KeyDB instance up locally and running on port 6379
 
 #### Other KeyDB instances
 
-If you have a KeyDB instace setup any other way or have a KeyDB instance located externally. You'll need to update the `spring.data.KeyDB.url` variable in application-local.yml to the KeyDB instance url.
+If you have a KeyDB instace setup any other way or have a KeyDB instance located externally. You'll need to update the `spring.data.redis.url` variable in application-local.yml to the KeyDB instance url.
 
 ## Running the application
 
