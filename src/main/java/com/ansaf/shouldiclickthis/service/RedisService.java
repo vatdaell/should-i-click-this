@@ -1,18 +1,18 @@
 package com.ansaf.shouldiclickthis.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class RedisService {
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+
+    private final StringRedisTemplate redisTemplate;
 
     public void saveUrlsInChunks(String key, List<String> urls, int chunkSize) {
         List<List<String>> chunks = splitIntoChunks(urls, chunkSize);
@@ -31,6 +31,9 @@ public class RedisService {
     public boolean urlContains(String key, String value){
         log.info("Starting redis search for url: {} in set: {}", value, key);
         boolean inSet = Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, value));
+        if (inSet) {
+            log.info("Found url: {} in set: {}", value, key);
+        }
         log.info("Completed redis search");
         return inSet;
     }
@@ -44,5 +47,13 @@ public class RedisService {
         }
 
         return chunkedList;
+    }
+
+    public void setString(String key, String value){
+        redisTemplate.opsForValue().set(key, value);
+    }
+
+    public String getString(String key){
+        return redisTemplate.opsForValue().get(key);
     }
 }
