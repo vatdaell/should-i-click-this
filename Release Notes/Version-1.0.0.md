@@ -1,6 +1,9 @@
-## 1.0.0 (2024-04-07)
+## 1.0.0 (2024-03-21)
 
-> Description
+> Should I click this? backend is an application backend that extracts data from phishing.db. The
+> backend stores suspicious links and domains into redis which is used to verify if the links are
+> suspicious or not. The application has a rate limiter to prevent overusage. The application also has
+> basic authentication to only allow verified applications to make requests.
 
 ### New Features
 
