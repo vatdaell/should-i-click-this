@@ -5,6 +5,8 @@ import static com.ansaf.shouldiclickthis.constant.ControllerConstant.LINK_PARAM;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.URL_PARAM;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_UPDATED;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_UPDATED;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_UPDATED;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_SET;
@@ -15,8 +17,8 @@ import com.ansaf.shouldiclickthis.model.SuccessResponse;
 import com.ansaf.shouldiclickthis.service.RateLimiterService;
 import com.ansaf.shouldiclickthis.service.RedisService;
 import com.ansaf.shouldiclickthis.service.TimeService;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,15 +27,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(path = "${apiPrefix}")
 @Slf4j
+@AllArgsConstructor
 public class ApiController {
-    @Autowired
-    private RedisService redisService;
 
-    @Autowired
-    private TimeService timeService;
+    private final RedisService redisService;
 
-    @Autowired
-    private RateLimiterService rateLimiterService;
+    private final TimeService timeService;
+
+    private final RateLimiterService rateLimiterService;
 
     @PostMapping("/domain")
     public SuccessResponse domainSafety(@RequestParam(DOMAIN_PARAM) String domain) throws TooManyRequestsException {
@@ -89,6 +90,26 @@ public class ApiController {
                 .build();
     }
 
+    @PostMapping("/ipsum")
+    public SuccessResponse ipSumSafety(@RequestParam(URL_PARAM) String ip)
+        throws TooManyRequestsException {
+        rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1,
+            "Too many requests on /api/ipsum");
+        log.info("IpSum verification request started");
+        boolean status = redisService.urlContains(IPSUM_SET, ip);
+        String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
+        String lastUpdated = redisService.getString(IPSUM_UPDATED);
+        log.info("IpSum verification request completed");
+
+        return SuccessResponse
+            .builder()
+            .url(ip)
+            .status(status)
+            .responseTime(currentTime)
+            .lastUpdated(lastUpdated)
+            .build();
+    }
+
     @PostMapping("/consolidated")
     public SuccessResponse consolidated(@RequestParam(URL_PARAM) String url)
         throws TooManyRequestsException {
@@ -98,7 +119,8 @@ public class ApiController {
         log.info("Consolidated verification request started");
         boolean status =
             redisService.urlContains(OPENPHISH_SET, url) || redisService.urlContains(DOMAIN_SET,
-                url) || redisService.urlContains(LINK_SET, url);
+                url) || redisService.urlContains(LINK_SET, url) || redisService.urlContains(
+                IPSUM_SET, url);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
         String lastUpdated = redisService.getString(OPENPHISH_UPDATED);
         log.info("Consolidated verification request completed");
