@@ -1,6 +1,17 @@
 package com.ansaf.shouldiclickthis.service;
 
-import com.ansaf.shouldiclickthis.exception.EmptyFileFileContentException;
+import static org.assertj.core.api.Fail.fail;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.util.AssertionErrors.assertEquals;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -9,37 +20,14 @@ import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpMethod;
-import org.springframework.web.client.RestTemplate;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.zip.GZIPOutputStream;
-
-import static org.assertj.core.api.Fail.fail;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.util.AssertionErrors.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
 public class FileServiceTest {
-    @Mock
-    private RestTemplate restTemplate;
-
-    @InjectMocks
     private FileService fileService;
     @BeforeEach
     void setUp(){
-        fileService = new FileService(restTemplate);
+        fileService = new FileService();
     }
 
     private byte[] createGzippedContent(String content) throws IOException {
@@ -48,11 +36,6 @@ public class FileServiceTest {
             zipStream.write(content.getBytes(StandardCharsets.UTF_8));
         }
         return byteStream.toByteArray();
-    }
-
-    private TarArchiveInputStream createArchiveInputStream(String content){
-        ByteArrayInputStream bis = new ByteArrayInputStream(content.getBytes());
-        return new TarArchiveInputStream(bis);
     }
 
     @Test
@@ -64,44 +47,14 @@ public class FileServiceTest {
         try {
             gzippedContent = createGzippedContent(testContent);
             TarArchiveInputStream resultStream = fileService.unzipFolder(gzippedContent);
-
-            // Verify the result is a TarArchiveInputStream
             assertNotNull(resultStream);
-
-            // Optionally, read from the resultStream to further assert correct behavior
 
         } catch (Exception e) {
             fail("Exception should not be thrown");
         }
     }
 
-    @Test
-    void testLoadFileContent() throws Exception {
-        // Given
-        String url = "http://example.com/file.tar.gz";
-        byte[] expectedContent = "File content".getBytes();
-        given(restTemplate.execute(
-                eq(url), eq(HttpMethod.GET), any(), any()))
-                .willReturn(expectedContent);
 
-        // When
-        byte[] actualContent = fileService.loadFileContent(url);
-
-        assertEquals("Wrong actual content is loaded", new String(expectedContent), new String(actualContent));
-
-    }
-
-    @Test
-    void testLoadFileContentThrowsEmptyFileException() throws Exception {
-        // Given
-        String url = "http://example.com/file.tar.gz";
-        given(restTemplate.execute(
-                eq(url), eq(HttpMethod.GET), any(), any()))
-                .willReturn(null);
-
-        assertThrows(EmptyFileFileContentException.class, () -> fileService.loadFileContent(url));
-
-    }
 
     @Test
     void testExtractRowsFromZip() throws IOException {
@@ -171,6 +124,40 @@ public class FileServiceTest {
         assertEquals("First URL should match.","url1.com", urls.get(0));
         assertEquals("Second URL should match.", "url2.com", urls.get(1));
         assertEquals("Third URL should match.", "url3.com", urls.get(2));
+    }
+
+    @Test
+    void testRowParsing() throws IOException {
+        String csvString = """
+            # IPsum Threat Intelligence Feed
+            # (https://github.com/stamparm/ipsum)
+            #
+            # Last update: Tue, 09 Apr 2024 03:11:09 +0200
+            #
+            # IP\tnumber of (black)lists
+            #
+            185.224.128.34\t11
+            82.200.65.218\t8
+            186.96.145.241\t8
+            178.20.55.16\t8""";
+
+        byte[] csvByte = csvString.getBytes(StandardCharsets.UTF_8);
+        List<String[]> actual = fileService.parseAndSkipLines(csvByte, 7, "\t");
+        List<String[]> expected = Arrays.asList(
+            new String[]{"185.224.128.34", "11"},
+            new String[]{"82.200.65.218", "8"},
+            new String[]{"186.96.145.241", "8"},
+            new String[]{"178.20.55.16", "8"}
+        );
+        assertEquals("Parsed Length must be correct", expected.size(), actual.size());
+
+        AtomicInteger idx = new AtomicInteger();
+        expected.forEach(e -> {
+            String[] currentActual = expected.get(idx.get());
+            assertEquals("IP address must be correct", e[0], currentActual[0]);
+            assertEquals("Blacklist amount must be correct", e[1], currentActual[1]);
+            idx.getAndIncrement();
+        });
     }
 
     private ByteArrayOutputStream getByteArrayOutputStream(String filename, String input) throws IOException {

@@ -1,6 +1,7 @@
 package com.ansaf.shouldiclickthis.controller;
 
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_SET;
 import static org.mockito.ArgumentMatchers.any;
@@ -215,7 +216,8 @@ public class ApiControllerTest {
 
     @Test
     void consolidatedControllerResponseIsOneTrue() throws TooManyRequestsException {
-        given(redisService.urlContains(anyString(), eq(input))).willReturn(true, false, false);
+        given(redisService.urlContains(anyString(), eq(input))).willReturn(true, false, false,
+            false);
         given(timeService.getNowTime()).willReturn(localDateTime);
         given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
@@ -259,6 +261,56 @@ public class ApiControllerTest {
         SuccessResponse actual = apiController.consolidated(input);
 
         assertSuccessResponse(expected, actual);
+    }
+
+    @Test
+    void IpSumSafetyIsFalse() throws TooManyRequestsException {
+        given(redisService.urlContains(IPSUM_SET, input)).willReturn(false);
+        given(timeService.getNowTime()).willReturn(localDateTime);
+        given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
+        given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
+            .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
+            .build());
+        doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
+        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+
+        SuccessResponse expected = SuccessResponse
+            .builder()
+            .url(input)
+            .status(false)
+            .responseTime(localDateTimeString)
+            .lastUpdated(localDateTimeString)
+            .build();
+
+        SuccessResponse actual = apiController.ipSumSafety(input);
+
+        assertSuccessResponse(expected, actual);
+
+    }
+
+    @Test
+    void IpSumSafetyIsTrue() throws TooManyRequestsException {
+        given(redisService.urlContains(IPSUM_SET, input)).willReturn(true);
+        given(timeService.getNowTime()).willReturn(localDateTime);
+        given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
+        given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
+            .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
+            .build());
+        doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
+        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+
+        SuccessResponse expected = SuccessResponse
+            .builder()
+            .url(input)
+            .status(true)
+            .responseTime(localDateTimeString)
+            .lastUpdated(localDateTimeString)
+            .build();
+
+        SuccessResponse actual = apiController.ipSumSafety(input);
+
+        assertSuccessResponse(expected, actual);
+
     }
 
     private void assertSuccessResponse(SuccessResponse expected, SuccessResponse actual){
