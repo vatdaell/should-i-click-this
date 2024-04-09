@@ -1,10 +1,11 @@
 package com.ansaf.shouldiclickthis.service;
 
-import com.ansaf.shouldiclickthis.exception.EmptyFileFileContentException;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,16 +14,11 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
 public class FileService {
-
-    private final RestTemplate restTemplate;
 
     public TarArchiveInputStream unzipFolder(byte[] fileContent) throws Exception{
         InputStream fi = new ByteArrayInputStream(fileContent);
@@ -31,20 +27,6 @@ public class FileService {
         return new TarArchiveInputStream(gzi);
     }
 
-    public byte[] loadFileContent(String url) throws EmptyFileFileContentException {
-        byte[] fileContent = restTemplate.execute(
-                url,
-                HttpMethod.GET,
-                null,
-                clientHttpResponse -> StreamUtils.copyToByteArray(clientHttpResponse.getBody())
-        );
-
-        if(fileContent == null){
-            throw new EmptyFileFileContentException("Tar file was not loaded");
-        }
-
-        return fileContent;
-    }
 
     public List<String> extractRowsFromZip(TarArchiveEntry entry, TarArchiveInputStream ti, String ext, String delimiter) throws IOException {
         List<String> urls = new ArrayList<>();
@@ -58,5 +40,27 @@ public class FileService {
     public List<String> extractRowFromString(byte[] fileContent, String delimiter){
         String fileText = new String(fileContent, StandardCharsets.UTF_8);
         return Arrays.asList(fileText.split(delimiter));
+    }
+
+    public List<String[]> parseAndSkipLines(byte[] fileContent, int skipLines, String delimiter)
+        throws IOException {
+        List<String[]> result = new ArrayList<>();
+        String contentAsString = new String(fileContent, StandardCharsets.UTF_8);
+
+        try (BufferedReader reader = new BufferedReader(new StringReader(contentAsString))) {
+            // Skipping lines
+            for (int i = 0; i < skipLines; i++) {
+                reader.readLine();
+            }
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // Splitting each line by the specified delimiter
+                String[] parts = line.split(delimiter);
+                result.add(parts);
+            }
+        }
+
+        return result;
     }
 }
