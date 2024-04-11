@@ -14,25 +14,25 @@ public class RedisService {
 
     private final StringRedisTemplate redisTemplate;
 
-    public void saveUrlsInChunks(String key, List<String> urls, int chunkSize) {
-        List<List<String>> chunks = splitIntoChunks(urls, chunkSize);
+    public void saveValuesInChunks(String key, List<String> values, int chunkSize) {
+        List<List<String>> chunks = splitIntoChunks(values, chunkSize);
         redisTemplate.delete(key);
 
         for (int i=0; i<chunks.size(); i++){
             List<String> chunk = chunks.get(i);
             if(!chunk.isEmpty()){
-                log.info("Starting insertion of Url at chunk {}/{}", (i+1), chunkSize);
+                log.info("Starting insertion of values at chunk {}/{}", (i + 1), chunkSize);
                 redisTemplate.opsForSet().add(key, chunk.toArray(new String[0]));
-                log.info("Completed insertion of Url at chunk {}/{}", (i+1), chunkSize);
+                log.info("Completed insertion of values at chunk {}/{}", (i + 1), chunkSize);
             }
         }
     }
 
-    public boolean urlContains(String key, String value){
-        log.info("Starting redis search for url: {} in set: {}", value, key);
+    public boolean setContains(String key, String value) {
+        log.info("Starting redis search for value: {} in set: {}", value, key);
         boolean inSet = Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, value));
         if (inSet) {
-            log.info("Found url: {} in set: {}", value, key);
+            log.info("Found value: {} in set: {}", value, key);
         }
         log.info("Completed redis search");
         return inSet;
