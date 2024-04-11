@@ -41,7 +41,7 @@ public class ApiController {
         rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1, "Too many requests on /api/domain");
 
         log.info("Domain verification request started");
-        boolean status = redisService.urlContains(DOMAIN_SET, domain);
+        boolean status = redisService.setContains(DOMAIN_SET, domain);
         String lastUpdated = redisService.getString(DOMAIN_UPDATED);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
         log.info("Domain verification request completed");
@@ -59,7 +59,7 @@ public class ApiController {
         rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1, "Too many requests on /api/link");
 
         log.info("Link verification request started");
-        boolean status = redisService.urlContains(LINK_SET, link);
+        boolean status = redisService.setContains(LINK_SET, link);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
         String lastUpdated = redisService.getString(LINK_UPDATED);
         log.info("Link verification request completed");
@@ -76,7 +76,7 @@ public class ApiController {
     public SuccessResponse openPhishSafety(@RequestParam(LINK_PARAM) String link) throws TooManyRequestsException {
         rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1, "Too many requests on /api/openphish");
         log.info("OpenPhish verification request started");
-        boolean status = redisService.urlContains(OPENPHISH_SET, link);
+        boolean status = redisService.setContains(OPENPHISH_SET, link);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
         String lastUpdated = redisService.getString(OPENPHISH_UPDATED);
         log.info("OpenPhish verification request completed");
@@ -96,7 +96,7 @@ public class ApiController {
         rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1,
             "Too many requests on /api/ipsum");
         log.info("IpSum verification request started");
-        boolean status = redisService.urlContains(IPSUM_SET, ip);
+        boolean status = redisService.setContains(IPSUM_SET, ip);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
         String lastUpdated = redisService.getString(IPSUM_UPDATED);
         log.info("IpSum verification request completed");
@@ -118,8 +118,8 @@ public class ApiController {
 
         log.info("Consolidated verification request started");
         boolean status =
-            redisService.urlContains(OPENPHISH_SET, url) || redisService.urlContains(DOMAIN_SET,
-                url) || redisService.urlContains(LINK_SET, url) || redisService.urlContains(
+            redisService.setContains(OPENPHISH_SET, url) || redisService.setContains(DOMAIN_SET,
+                url) || redisService.setContains(LINK_SET, url) || redisService.setContains(
                 IPSUM_SET, url);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
         String lastUpdated = redisService.getString(OPENPHISH_UPDATED);

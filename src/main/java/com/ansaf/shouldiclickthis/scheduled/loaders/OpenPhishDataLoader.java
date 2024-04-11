@@ -1,5 +1,6 @@
 package com.ansaf.shouldiclickthis.scheduled.loaders;
 
+import static com.ansaf.shouldiclickthis.constant.LoaderConstant.OPENPHISH_LOADER_NAME;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_UPDATED;
 import static org.springframework.http.HttpMethod.GET;
@@ -24,7 +25,7 @@ public class OpenPhishDataLoader extends AbstractDataLoader {
   public OpenPhishDataLoader(TimeService timeService,
       RedisService redisService, RestService restService, FileService fileService,
       OpenPhishConfig openPhishConfig) {
-    super(timeService, redisService, restService, fileService, "OpenPhishDataLoader",
+    super(timeService, redisService, restService, fileService, OPENPHISH_LOADER_NAME,
         new ArrayList<>(),
         openPhishConfig.getInterval());
     this.openPhishConfig = openPhishConfig;
@@ -35,7 +36,6 @@ public class OpenPhishDataLoader extends AbstractDataLoader {
     try {
       byte[] fileContent = restService.loadFileContent(openPhishConfig.getUrl(), GET);
       rows = fileService.extractRowFromString(fileContent, "\n");
-
     } catch (EmptyFileFileContentException e) {
       log.error("OpenPhish file not loaded {}", e.getMessage());
     } catch (Exception e) {
@@ -46,7 +46,7 @@ public class OpenPhishDataLoader extends AbstractDataLoader {
   @Override
   protected void saveData() {
     try {
-      redisService.saveUrlsInChunks(OPENPHISH_SET, rows, openPhishConfig.getSplit());
+      redisService.saveValuesInChunks(OPENPHISH_SET, rows, openPhishConfig.getSplit());
       setUpdatedTime(OPENPHISH_UPDATED);
       log.info("File loaded from OpenPhish");
     } catch (DataAccessException e) {

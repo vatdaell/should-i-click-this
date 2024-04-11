@@ -1,5 +1,6 @@
 package com.ansaf.shouldiclickthis.scheduled.loaders;
 
+import static com.ansaf.shouldiclickthis.constant.LoaderConstant.IPSUM_LOADER_NAME;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_UPDATED;
 import static org.springframework.http.HttpMethod.GET;
@@ -25,7 +26,7 @@ public class IpSumDataLoader extends AbstractDataLoader {
       RedisService redisService,
       RestService restService,
       FileService fileService, IpSumConfig ipSumConfig) {
-    super(timeService, redisService, restService, fileService, "IpSum", new ArrayList<>(),
+    super(timeService, redisService, restService, fileService, IPSUM_LOADER_NAME, new ArrayList<>(),
         ipSumConfig.getInterval());
     this.ipSumConfig = ipSumConfig;
   }
@@ -37,7 +38,6 @@ public class IpSumDataLoader extends AbstractDataLoader {
       rows = fileService.parseAndSkipLines(fileContent, ipSumConfig.getSkip(),
               ipSumConfig.getDelimiter()).stream().filter(r -> r.length > 0).map(r -> r[0])
           .toList();
-      setUpdatedTime(IPSUM_UPDATED);
       log.info("File loaded from IPSum");
     } catch (EmptyFileFileContentException e) {
       log.error("IPSum file not loaded {}", e.getMessage());
@@ -49,7 +49,8 @@ public class IpSumDataLoader extends AbstractDataLoader {
   @Override
   protected void saveData() {
     try {
-      redisService.saveUrlsInChunks(IPSUM_SET, rows, ipSumConfig.getSplit());
+      redisService.saveValuesInChunks(IPSUM_SET, rows, ipSumConfig.getSplit());
+      setUpdatedTime(IPSUM_UPDATED);
     } catch (DataAccessException e) {
       log.error("Issues inserting IpSum into Redis: {}", e.getMessage());
 

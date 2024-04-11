@@ -1,5 +1,6 @@
 package com.ansaf.shouldiclickthis.scheduled.loaders;
 
+import static com.ansaf.shouldiclickthis.constant.LoaderConstant.PHISHING_DB_LINK_LOADER_NAME;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_UPDATED;
 import static org.springframework.http.HttpMethod.GET;
@@ -28,7 +29,7 @@ public class PhishingDbLinkLoader extends AbstractDataLoader {
       RedisService redisService,
       RestService restService,
       FileService fileService, PhishingDbConfig phishingDbConfig) {
-    super(timeService, redisService, restService, fileService, "PhishingDbDomainLoader",
+    super(timeService, redisService, restService, fileService, PHISHING_DB_LINK_LOADER_NAME,
         new ArrayList<>(),
         phishingDbConfig.getLinksInterval());
     this.phishingDbConfig = phishingDbConfig;
@@ -61,7 +62,7 @@ public class PhishingDbLinkLoader extends AbstractDataLoader {
       log.warn("No data for Phishing.db Links was found");
     } else {
       try {
-        redisService.saveUrlsInChunks(LINK_SET, rows, phishingDbConfig.getLinksSplit());
+        redisService.saveValuesInChunks(LINK_SET, rows, phishingDbConfig.getLinksSplit());
         log.info("Phishing.db Links loaded in set: {}", LINK_SET);
         setUpdatedTime(LINK_UPDATED);
       } catch (DataAccessException e) {
