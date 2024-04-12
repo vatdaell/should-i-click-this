@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "ipsum")
 @Data
 public class IpSumConfig {
-
   private int interval;
   private int split;
   private String url;

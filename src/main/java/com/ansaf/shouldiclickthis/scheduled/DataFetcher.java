@@ -5,6 +5,8 @@ import com.ansaf.shouldiclickthis.scheduled.loaders.IpSumDataLoader;
 import com.ansaf.shouldiclickthis.scheduled.loaders.OpenPhishDataLoader;
 import com.ansaf.shouldiclickthis.scheduled.loaders.PhishingDbDomainDataLoader;
 import com.ansaf.shouldiclickthis.scheduled.loaders.PhishingDbLinkLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.UrlHausDomainDataLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.UrlHausLinkDataLoader;
 import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +22,11 @@ public class DataFetcher {
   public DataFetcher(TaskScheduler taskScheduler,
       PhishingDbDomainDataLoader phishingDbDomainDataLoader,
       PhishingDbLinkLoader phishingDbLinkLoader, OpenPhishDataLoader openPhishDataLoader,
-      IpSumDataLoader ipSumDataLoader) {
+      IpSumDataLoader ipSumDataLoader, UrlHausLinkDataLoader urlHausLinkDataLoader,
+      UrlHausDomainDataLoader urlHausDomainDataLoader) {
     this.taskScheduler = taskScheduler;
     scheduleTasks(List.of(phishingDbDomainDataLoader, phishingDbLinkLoader, openPhishDataLoader,
-        ipSumDataLoader));
+        ipSumDataLoader, urlHausLinkDataLoader, urlHausDomainDataLoader));
   }
 
   private void scheduleTasks(List<AbstractDataLoader> loaders) {
@@ -31,7 +34,7 @@ public class DataFetcher {
   }
 
   private void scheduleTask(AbstractDataLoader loader) {
-    taskScheduler.scheduleWithFixedDelay(loader::process, Duration.ofSeconds(
+    taskScheduler.scheduleWithFixedDelay(loader::process, Duration.ofMillis(
         loader.getFixedTimeString()));
     }
 

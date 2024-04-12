@@ -127,27 +127,80 @@ public class FileServiceTest {
     }
 
     @Test
-    void testRowParsing() throws IOException {
+    void testpRowParsing() throws IOException {
         String csvString = """
-            # IPsum Threat Intelligence Feed
-            # (https://github.com/stamparm/ipsum)
-            #
-            # Last update: Tue, 09 Apr 2024 03:11:09 +0200
-            #
-            # IP\tnumber of (black)lists
-            #
             185.224.128.34\t11
             82.200.65.218\t8
             186.96.145.241\t8
             178.20.55.16\t8""";
 
         byte[] csvByte = csvString.getBytes(StandardCharsets.UTF_8);
-        List<String[]> actual = fileService.parseAndSkipLines(csvByte, 7, "\t");
+        List<String[]> actual = fileService.parseAndSkipLines(csvByte, 0, 0, "\t");
         List<String[]> expected = Arrays.asList(
             new String[]{"185.224.128.34", "11"},
             new String[]{"82.200.65.218", "8"},
             new String[]{"186.96.145.241", "8"},
             new String[]{"178.20.55.16", "8"}
+        );
+        assertEquals("Parsed Length must be correct", expected.size(), actual.size());
+
+        AtomicInteger idx = new AtomicInteger();
+        expected.forEach(e -> {
+            String[] currentActual = expected.get(idx.get());
+            assertEquals("IP address must be correct", e[0], currentActual[0]);
+            assertEquals("Blacklist amount must be correct", e[1], currentActual[1]);
+            idx.getAndIncrement();
+        });
+    }
+
+    @Test
+    void testHeaderSkipRowParsing() throws IOException {
+        String csvString = """
+            # THIS LINE SHOULD BE SKIPPED
+            # THIS LINE SHOULD BE SKIPPED
+            # THIS LINE SHOULD BE SKIPPED
+            # THIS LINE SHOULD BE SKIPPED
+            # THIS LINE SHOULD BE SKIPPED
+            # THIS LINE SHOULD BE SKIPPED
+            # THIS LINE SHOULD BE SKIPPED
+            185.224.128.34\t11
+            82.200.65.218\t8
+            186.96.145.241\t8
+            178.20.55.16\t8""";
+
+        byte[] csvByte = csvString.getBytes(StandardCharsets.UTF_8);
+        List<String[]> actual = fileService.parseAndSkipLines(csvByte, 7, 0, "\t");
+        List<String[]> expected = Arrays.asList(
+            new String[]{"185.224.128.34", "11"},
+            new String[]{"82.200.65.218", "8"},
+            new String[]{"186.96.145.241", "8"},
+            new String[]{"178.20.55.16", "8"}
+        );
+        assertEquals("Parsed Length must be correct", expected.size(), actual.size());
+
+        AtomicInteger idx = new AtomicInteger();
+        expected.forEach(e -> {
+            String[] currentActual = expected.get(idx.get());
+            assertEquals("IP address must be correct", e[0], currentActual[0]);
+            assertEquals("Blacklist amount must be correct", e[1], currentActual[1]);
+            idx.getAndIncrement();
+        });
+    }
+
+    @Test
+    void testFooterSkipRowParsing() throws IOException {
+        String csvString = """
+            185.224.128.34\t11
+            82.200.65.218\t8
+            186.96.145.241\t8
+            THIS LINE SHOULD BE SKIPPED""";
+
+        byte[] csvByte = csvString.getBytes(StandardCharsets.UTF_8);
+        List<String[]> actual = fileService.parseAndSkipLines(csvByte, 0, 1, "\t");
+        List<String[]> expected = Arrays.asList(
+            new String[]{"185.224.128.34", "11"},
+            new String[]{"82.200.65.218", "8"},
+            new String[]{"186.96.145.241", "8"}
         );
         assertEquals("Parsed Length must be correct", expected.size(), actual.size());
 

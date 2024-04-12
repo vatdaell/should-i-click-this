@@ -6,7 +6,6 @@ import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_UPDATED;
 import static org.springframework.http.HttpMethod.GET;
 
 import com.ansaf.shouldiclickthis.config.IpSumConfig;
-import com.ansaf.shouldiclickthis.exception.EmptyFileFileContentException;
 import com.ansaf.shouldiclickthis.service.FileService;
 import com.ansaf.shouldiclickthis.service.RedisService;
 import com.ansaf.shouldiclickthis.service.RestService;
@@ -33,21 +32,13 @@ public class IpSumDataLoader extends AbstractDataLoader {
 
   @Override
   protected void extractData() {
-    try {
-      byte[] fileContent = restService.loadFileContent(ipSumConfig.getUrl(), GET);
-      rows = fileService.parseAndSkipLines(fileContent, ipSumConfig.getSkip(),
-              ipSumConfig.getDelimiter()).stream().filter(r -> r.length > 0).map(r -> r[0])
-          .toList();
-      log.info("File loaded from IPSum");
-    } catch (EmptyFileFileContentException e) {
-      log.error("IPSum file not loaded {}", e.getMessage());
-    } catch (Exception e) {
-      log.error("Unknown error occurred while loading IPSum file: {}", e.getMessage());
-    }
+    extractCsvTextFile(ipSumConfig.getUrl(), ipSumConfig.getSkip(), 0, ipSumConfig.getDelimiter(),
+        0, GET);
   }
 
   @Override
   protected void saveData() {
+    saveTextFileToRedis(IPSUM_SET, IPSUM_UPDATED, ipSumConfig.getSplit());
     try {
       redisService.saveValuesInChunks(IPSUM_SET, rows, ipSumConfig.getSplit());
       setUpdatedTime(IPSUM_UPDATED);

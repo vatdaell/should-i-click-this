@@ -1,9 +1,9 @@
 package com.ansaf.shouldiclickthis.controller;
 
-import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_SET;
-import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.PHISHING_DB_LINK_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.PHISHING_DOMAIN_SET;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -52,7 +52,7 @@ public class ApiControllerTest {
 
     @Test
     void domainControllerResponseIsStatusSuccess() throws Exception {
-        given(redisService.setContains(DOMAIN_SET, input)).willReturn(true);
+        given(redisService.setContains(PHISHING_DOMAIN_SET, input)).willReturn(true);
         given(timeService.getNowTime()).willReturn(localDateTime);
         given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
@@ -75,7 +75,7 @@ public class ApiControllerTest {
 
     @Test
     void domainControllerResponseIsNotStatusSuccess() throws Exception {
-        given(redisService.setContains(DOMAIN_SET, input)).willReturn(false);
+        given(redisService.setContains(PHISHING_DOMAIN_SET, input)).willReturn(false);
         given(timeService.getNowTime()).willReturn(localDateTime);
         given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
@@ -98,7 +98,7 @@ public class ApiControllerTest {
 
     @Test
     void linkControllerResponseIsStatusSuccess() throws TooManyRequestsException {
-        given(redisService.setContains(LINK_SET, input)).willReturn(true);
+        given(redisService.setContains(PHISHING_DB_LINK_SET, input)).willReturn(true);
         given(timeService.getNowTime()).willReturn(localDateTime);
         given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
@@ -121,7 +121,7 @@ public class ApiControllerTest {
 
     @Test
     void linkControllerResponseIsNotStatusSuccess() throws TooManyRequestsException {
-        given(redisService.setContains(LINK_SET, input)).willReturn(false);
+        given(redisService.setContains(PHISHING_DB_LINK_SET, input)).willReturn(false);
         given(timeService.getNowTime()).willReturn(localDateTime);
         given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
@@ -216,8 +216,8 @@ public class ApiControllerTest {
 
     @Test
     void consolidatedControllerResponseIsOneTrue() throws TooManyRequestsException {
-        given(redisService.setContains(anyString(), eq(input))).willReturn(true, false, false,
-            false);
+        given(redisService.setContains(anyString(), eq(input))).willReturn(false, false, true,
+            false, false, false);
         given(timeService.getNowTime()).willReturn(localDateTime);
         given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
