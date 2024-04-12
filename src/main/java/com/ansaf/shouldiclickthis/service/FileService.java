@@ -42,22 +42,24 @@ public class FileService {
         return Arrays.asList(fileText.split(delimiter));
     }
 
-    public List<String[]> parseAndSkipLines(byte[] fileContent, int skipLines, String delimiter)
+    public List<String[]> parseAndSkipLines(byte[] fileContent, int skipHeader, int skipFooter,
+        String delimiter)
         throws IOException {
         List<String[]> result = new ArrayList<>();
         String contentAsString = new String(fileContent, StandardCharsets.UTF_8);
 
         try (BufferedReader reader = new BufferedReader(new StringReader(contentAsString))) {
-            // Skipping lines
-            for (int i = 0; i < skipLines; i++) {
+            for (int i = 0; i < skipHeader; i++) {
                 reader.readLine();
             }
-
             String line;
             while ((line = reader.readLine()) != null) {
-                // Splitting each line by the specified delimiter
                 String[] parts = line.split(delimiter);
                 result.add(parts);
+            }
+
+            for (int j = 0; j < skipFooter; j++) {
+                result.remove(result.size() - 1);
             }
         }
 

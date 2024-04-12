@@ -3,20 +3,23 @@ package com.ansaf.shouldiclickthis.controller;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.DOMAIN_PARAM;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.LINK_PARAM;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.URL_PARAM;
-import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_SET;
-import static com.ansaf.shouldiclickthis.constant.RedisConstant.DOMAIN_UPDATED;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_UPDATED;
-import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_SET;
-import static com.ansaf.shouldiclickthis.constant.RedisConstant.LINK_UPDATED;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_UPDATED;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.PHISHING_DB_LINK_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.PHISHING_DB_LINK_UPDATED;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.PHISHING_DOMAIN_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.PHISHING_DOMAIN_UPDATED;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.URL_HAUS_DOMAIN_SET;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.URL_HAUS_LINK_SET;
 
 import com.ansaf.shouldiclickthis.exception.TooManyRequestsException;
 import com.ansaf.shouldiclickthis.model.SuccessResponse;
 import com.ansaf.shouldiclickthis.service.RateLimiterService;
 import com.ansaf.shouldiclickthis.service.RedisService;
 import com.ansaf.shouldiclickthis.service.TimeService;
+import java.util.stream.Stream;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,8 +44,8 @@ public class ApiController {
         rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1, "Too many requests on /api/domain");
 
         log.info("Domain verification request started");
-        boolean status = redisService.setContains(DOMAIN_SET, domain);
-        String lastUpdated = redisService.getString(DOMAIN_UPDATED);
+        boolean status = redisService.setContains(PHISHING_DOMAIN_SET, domain);
+        String lastUpdated = redisService.getString(PHISHING_DOMAIN_UPDATED);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
         log.info("Domain verification request completed");
         return SuccessResponse
@@ -59,9 +62,9 @@ public class ApiController {
         rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1, "Too many requests on /api/link");
 
         log.info("Link verification request started");
-        boolean status = redisService.setContains(LINK_SET, link);
+        boolean status = redisService.setContains(PHISHING_DB_LINK_SET, link);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
-        String lastUpdated = redisService.getString(LINK_UPDATED);
+        String lastUpdated = redisService.getString(PHISHING_DB_LINK_UPDATED);
         log.info("Link verification request completed");
         return SuccessResponse
                 .builder()
@@ -117,12 +120,11 @@ public class ApiController {
             "Too many requests on /api/consolidated");
 
         log.info("Consolidated verification request started");
-        boolean status =
-            redisService.setContains(OPENPHISH_SET, url) || redisService.setContains(DOMAIN_SET,
-                url) || redisService.setContains(LINK_SET, url) || redisService.setContains(
-                IPSUM_SET, url);
+        boolean status = Stream.of(OPENPHISH_SET, PHISHING_DB_LINK_SET, PHISHING_DOMAIN_SET,
+                IPSUM_SET, URL_HAUS_DOMAIN_SET, URL_HAUS_LINK_SET)
+            .anyMatch(set -> redisService.setContains(set, url));
+
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
-        String lastUpdated = redisService.getString(OPENPHISH_UPDATED);
         log.info("Consolidated verification request completed");
 
         return SuccessResponse
@@ -130,7 +132,6 @@ public class ApiController {
             .url(url)
             .status(status)
             .responseTime(currentTime)
-            .lastUpdated(lastUpdated)
             .build();
     }
 }
