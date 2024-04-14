@@ -15,4 +15,7 @@ public class RedisConstant {
 
     public static final String URL_HAUS_DOMAIN_SET = "urlHausDomainSet";
     public static final String URL_HAUS_DOMAIN_UPDATED = "urlHausDomainUpdated";
+    public static final String CINS_SET = "cinsSet";
+    public static final String CINS_UPDATED = "cinsUpdated";
+
 }
