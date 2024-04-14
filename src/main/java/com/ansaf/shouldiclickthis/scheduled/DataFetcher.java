@@ -1,6 +1,7 @@
 package com.ansaf.shouldiclickthis.scheduled;
 
 import com.ansaf.shouldiclickthis.scheduled.loaders.AbstractDataLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.CinsDataLoader;
 import com.ansaf.shouldiclickthis.scheduled.loaders.IpSumDataLoader;
 import com.ansaf.shouldiclickthis.scheduled.loaders.OpenPhishDataLoader;
 import com.ansaf.shouldiclickthis.scheduled.loaders.PhishingDbDomainDataLoader;
@@ -23,10 +24,10 @@ public class DataFetcher {
       PhishingDbDomainDataLoader phishingDbDomainDataLoader,
       PhishingDbLinkLoader phishingDbLinkLoader, OpenPhishDataLoader openPhishDataLoader,
       IpSumDataLoader ipSumDataLoader, UrlHausLinkDataLoader urlHausLinkDataLoader,
-      UrlHausDomainDataLoader urlHausDomainDataLoader) {
+      UrlHausDomainDataLoader urlHausDomainDataLoader, CinsDataLoader cinsDataLoader) {
     this.taskScheduler = taskScheduler;
     scheduleTasks(List.of(phishingDbDomainDataLoader, phishingDbLinkLoader, openPhishDataLoader,
-        ipSumDataLoader, urlHausLinkDataLoader, urlHausDomainDataLoader));
+        ipSumDataLoader, urlHausLinkDataLoader, urlHausDomainDataLoader, cinsDataLoader));
   }
 
   private void scheduleTasks(List<AbstractDataLoader> loaders) {

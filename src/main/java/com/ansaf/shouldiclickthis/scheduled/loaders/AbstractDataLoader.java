@@ -41,7 +41,7 @@ public abstract class AbstractDataLoader {
     log.info("Ending data loader: {}", loaderName);
   }
 
-  protected void setUpdatedTime(String key) {
+  private void setUpdatedTime(String key) {
     String currentTimeInString = timeService.getIsoFormatString(timeService.getNowTime());
     redisService.setString(key, currentTimeInString);
   }

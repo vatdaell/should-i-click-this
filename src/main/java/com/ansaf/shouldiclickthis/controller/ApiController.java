@@ -3,6 +3,7 @@ package com.ansaf.shouldiclickthis.controller;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.DOMAIN_PARAM;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.LINK_PARAM;
 import static com.ansaf.shouldiclickthis.constant.ControllerConstant.URL_PARAM;
+import static com.ansaf.shouldiclickthis.constant.RedisConstant.CINS_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.IPSUM_UPDATED;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.OPENPHISH_SET;
@@ -121,7 +122,7 @@ public class ApiController {
 
         log.info("Consolidated verification request started");
         boolean status = Stream.of(OPENPHISH_SET, PHISHING_DB_LINK_SET, PHISHING_DOMAIN_SET,
-                IPSUM_SET, URL_HAUS_DOMAIN_SET, URL_HAUS_LINK_SET)
+                IPSUM_SET, URL_HAUS_DOMAIN_SET, URL_HAUS_LINK_SET, CINS_SET)
             .anyMatch(set -> redisService.setContains(set, url));
 
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());

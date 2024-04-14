@@ -12,7 +12,6 @@ import com.ansaf.shouldiclickthis.service.RestService;
 import com.ansaf.shouldiclickthis.service.TimeService;
 import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -39,14 +38,5 @@ public class IpSumDataLoader extends AbstractDataLoader {
   @Override
   protected void saveData() {
     saveTextFileToRedis(IPSUM_SET, IPSUM_UPDATED, ipSumConfig.getSplit());
-    try {
-      redisService.saveValuesInChunks(IPSUM_SET, rows, ipSumConfig.getSplit());
-      setUpdatedTime(IPSUM_UPDATED);
-    } catch (DataAccessException e) {
-      log.error("Issues inserting IpSum into Redis: {}", e.getMessage());
-
-    } catch (Exception e) {
-      log.error("Unknown error occurred while loading IPSum file: {}", e.getMessage());
-    }
   }
 }

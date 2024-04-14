@@ -8,5 +8,6 @@ public class LoaderConstant {
   public static String PHISHING_DB_LINK_LOADER_NAME = "PhishingDbLinkDataLoader";
   public static String URL_HAUS_LINK_LOADER_NAME = "UrlHausLink";
   public static String URL_HAUS_DOMAIN_LOADER_NAME = "UrlHausDomain";
+  public static String CINS_LOADER_NAME = "CinsLoaderName";
 
 }
