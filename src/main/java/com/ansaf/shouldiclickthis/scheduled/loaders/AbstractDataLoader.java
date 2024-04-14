@@ -37,7 +37,11 @@ public abstract class AbstractDataLoader {
   public void process() {
     log.info("Starting data loader: {}", loaderName);
     extractData();
-    saveData();
+    if (rows.isEmpty()) {
+      log.warn("No rows were extracted for loader {}", loaderName);
+    } else {
+      saveData();
+    }
     log.info("Ending data loader: {}", loaderName);
   }
 

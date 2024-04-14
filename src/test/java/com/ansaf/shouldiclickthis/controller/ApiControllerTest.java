@@ -199,14 +199,12 @@ public class ApiControllerTest {
             .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
             .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
             .builder()
             .url(input)
             .status(false)
             .responseTime(localDateTimeString)
-            .lastUpdated(localDateTimeString)
             .build();
 
         SuccessResponse actual = apiController.consolidated(input);
@@ -217,21 +215,19 @@ public class ApiControllerTest {
     @Test
     void consolidatedControllerResponseIsOneTrue() throws TooManyRequestsException {
         given(redisService.setContains(anyString(), eq(input))).willReturn(false, false, true,
-            false, false, false);
+            false, false, false, false, false, false, false);
         given(timeService.getNowTime()).willReturn(localDateTime);
         given(timeService.getIsoFormatString(eq(localDateTime))).willReturn(localDateTimeString);
         given(rateLimiterService.getPhishingDbBucket()).willReturn(Bucket.builder()
             .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
             .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
             .builder()
             .url(input)
             .status(true)
             .responseTime(localDateTimeString)
-            .lastUpdated(localDateTimeString)
             .build();
 
         SuccessResponse actual = apiController.consolidated(input);
@@ -248,14 +244,12 @@ public class ApiControllerTest {
             .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
             .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
             .builder()
             .url(input)
             .status(true)
             .responseTime(localDateTimeString)
-            .lastUpdated(localDateTimeString)
             .build();
 
         SuccessResponse actual = apiController.consolidated(input);
