@@ -47,7 +47,7 @@ public abstract class AbstractDataLoader {
 
   private void setUpdatedTime(String key) {
     String currentTimeInString = timeService.getIsoFormatString(timeService.getNowTime());
-    redisService.setString(key, currentTimeInString);
+    redisService.setSetString(key, currentTimeInString);
   }
 
   protected void saveTextFileToRedis(String setName, String updatedName, int split) {
