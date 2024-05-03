@@ -59,7 +59,7 @@ public class ApiControllerTest {
                 .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
                 .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+      given(redisService.getSetString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
                 .builder()
@@ -82,7 +82,7 @@ public class ApiControllerTest {
                 .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
                 .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+      given(redisService.getSetString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
                 .builder()
@@ -105,7 +105,7 @@ public class ApiControllerTest {
                 .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
                 .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+      given(redisService.getSetString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
                 .builder()
@@ -128,7 +128,7 @@ public class ApiControllerTest {
                 .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
                 .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+      given(redisService.getSetString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
                 .builder()
@@ -151,7 +151,7 @@ public class ApiControllerTest {
                 .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
                 .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+      given(redisService.getSetString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
                 .builder()
@@ -175,7 +175,7 @@ public class ApiControllerTest {
                 .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
                 .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+      given(redisService.getSetString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
                 .builder()
@@ -266,7 +266,7 @@ public class ApiControllerTest {
             .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
             .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+      given(redisService.getSetString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
             .builder()
@@ -291,7 +291,7 @@ public class ApiControllerTest {
             .addLimit(Bandwidth.classic(100, Refill.greedy(100, Duration.ofMinutes(1))))
             .build());
         doNothing().when(rateLimiterService).runRateLimit(any(), eq(1), any());
-        given(redisService.getString(anyString())).willReturn(localDateTimeString);
+      given(redisService.getSetString(anyString())).willReturn(localDateTimeString);
 
         SuccessResponse expected = SuccessResponse
             .builder()

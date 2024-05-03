@@ -18,12 +18,14 @@ import static com.ansaf.shouldiclickthis.constant.RedisConstant.PHISHING_DOMAIN_
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.URL_HAUS_DOMAIN_SET;
 import static com.ansaf.shouldiclickthis.constant.RedisConstant.URL_HAUS_LINK_SET;
 
+import com.ansaf.shouldiclickthis.config.AppConfig;
 import com.ansaf.shouldiclickthis.exception.TooManyRequestsException;
 import com.ansaf.shouldiclickthis.model.SuccessResponse;
 import com.ansaf.shouldiclickthis.service.RateLimiterService;
 import com.ansaf.shouldiclickthis.service.RedisService;
 import com.ansaf.shouldiclickthis.service.TimeService;
-import java.util.stream.Stream;
+import java.util.List;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,13 +45,15 @@ public class ApiController {
 
     private final RateLimiterService rateLimiterService;
 
+    private final AppConfig appConfig;
+
     @PostMapping("/domain")
     public SuccessResponse domainSafety(@RequestParam(DOMAIN_PARAM) String domain) throws TooManyRequestsException {
         rateLimiterService.runRateLimit(rateLimiterService.getPhishingDbBucket(), 1, "Too many requests on /api/domain");
 
         log.info("Domain verification request started");
         boolean status = redisService.setContains(PHISHING_DOMAIN_SET, domain);
-        String lastUpdated = redisService.getString(PHISHING_DOMAIN_UPDATED);
+        String lastUpdated = redisService.getSetString(PHISHING_DOMAIN_UPDATED);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
         log.info("Domain verification request completed");
         return SuccessResponse
@@ -68,7 +72,7 @@ public class ApiController {
         log.info("Link verification request started");
         boolean status = redisService.setContains(PHISHING_DB_LINK_SET, link);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
-        String lastUpdated = redisService.getString(PHISHING_DB_LINK_UPDATED);
+        String lastUpdated = redisService.getSetString(PHISHING_DB_LINK_UPDATED);
         log.info("Link verification request completed");
         return SuccessResponse
                 .builder()
@@ -85,7 +89,7 @@ public class ApiController {
         log.info("OpenPhish verification request started");
         boolean status = redisService.setContains(OPENPHISH_SET, link);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
-        String lastUpdated = redisService.getString(OPENPHISH_UPDATED);
+        String lastUpdated = redisService.getSetString(OPENPHISH_UPDATED);
         log.info("OpenPhish verification request completed");
 
         return SuccessResponse
@@ -105,7 +109,7 @@ public class ApiController {
         log.info("IpSum verification request started");
         boolean status = redisService.setContains(IPSUM_SET, ip);
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
-        String lastUpdated = redisService.getString(IPSUM_UPDATED);
+        String lastUpdated = redisService.getSetString(IPSUM_UPDATED);
         log.info("IpSum verification request completed");
 
         return SuccessResponse
@@ -124,10 +128,18 @@ public class ApiController {
             "Too many requests on /api/consolidated");
 
         log.info("Consolidated verification request started");
-        boolean status = Stream.of(OPENPHISH_SET, PHISHING_DB_LINK_SET, PHISHING_DOMAIN_SET,
-                IPSUM_SET, URL_HAUS_DOMAIN_SET, URL_HAUS_LINK_SET, CINS_SET, DIGITAL_SIDE_IPS_SET,
-                DIGITAL_SIDE_LINKS_SET, DIGITAL_SIDE_DOMAIN_SET)
-            .anyMatch(set -> redisService.setContains(set, url));
+        boolean status;
+        Optional<Boolean> cached = redisService.getValueAsBoolean(url);
+        if (cached.isEmpty()) {
+            status = redisService.isMemberOfAnySet(url, List.of(OPENPHISH_SET,
+                PHISHING_DB_LINK_SET, PHISHING_DOMAIN_SET,
+                IPSUM_SET, URL_HAUS_DOMAIN_SET, URL_HAUS_LINK_SET, CINS_SET,
+                DIGITAL_SIDE_IPS_SET, DIGITAL_SIDE_LINKS_SET, DIGITAL_SIDE_DOMAIN_SET));
+            redisService.setValueWithExpiry(url, status, appConfig.getExpiryMinutes());
+
+        } else {
+            status = cached.get();
+        }
 
         String currentTime = timeService.getIsoFormatString(timeService.getNowTime());
         log.info("Consolidated verification request completed");
