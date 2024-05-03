@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisOperations;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -85,6 +87,30 @@ public class RedisService {
 
     public String getSetString(String key) {
         return redisTemplate.opsForValue().get(key);
+    }
+
+    public boolean isMemberOfAnySet(String value, List<String> setKeys) {
+        log.info("Checking if value: {} is a member of any set", value);
+
+        List<Object> results = redisTemplate.executePipelined(new SessionCallback<>() {
+            @Override
+            public Object execute(RedisOperations operations) {
+                for (String key : setKeys) {
+                    operations.opsForSet().isMember(key, value);
+                }
+                return null; // Return value must be null for pipelining
+            }
+        });
+
+        for (Object result : results) {
+            if (Boolean.TRUE.equals(result)) {
+                log.info("Value: {} is a member of at least one set", value);
+                return true;
+            }
+        }
+
+        log.info("Value: {} is not a member of any set", value);
+        return false;
     }
 
 }
