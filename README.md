@@ -54,5 +54,6 @@ Many editors such as IntelliJ have built in Maven integration which is helpful f
 
 ## Release Notes
 
+* [Version 2.1.0](Release%20Notes/Version-2.1.0.md)
 * [Version 2.0.0](Release%20Notes/Version-2.0.0.md)
 * [Version 1.0.0](Release%20Notes/Version-1.0.0.md)
