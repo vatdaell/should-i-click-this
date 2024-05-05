@@ -5,9 +5,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "openphish")
+@ConfigurationProperties(prefix = "cins")
 @Data
-public class OpenPhishConfig {
+public class CinsConfig {
+
   private int interval;
   private int split;
   private String url;

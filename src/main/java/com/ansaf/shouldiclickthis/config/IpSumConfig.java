@@ -5,10 +5,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "openphish")
+@ConfigurationProperties(prefix = "ipsum")
 @Data
-public class OpenPhishConfig {
+public class IpSumConfig {
   private int interval;
   private int split;
   private String url;
+  private int skip;
+  private String delimiter;
 }

@@ -1,130 +1,47 @@
 package com.ansaf.shouldiclickthis.scheduled;
 
-import com.ansaf.shouldiclickthis.config.OpenPhishConfig;
-import com.ansaf.shouldiclickthis.config.PhishingDbConfig;
-import com.ansaf.shouldiclickthis.exception.EmptyFileFileContentException;
-import com.ansaf.shouldiclickthis.service.FileService;
-import com.ansaf.shouldiclickthis.service.RedisService;
-import com.ansaf.shouldiclickthis.service.TimeService;
+import com.ansaf.shouldiclickthis.scheduled.loaders.AbstractDataLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.CinsDataLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.DigitalSideDomainLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.DigitalSideIpLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.DigitalSideLinksLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.IpSumDataLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.OpenPhishDataLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.PhishingDbDomainDataLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.PhishingDbLinkLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.UrlHausDomainDataLoader;
+import com.ansaf.shouldiclickthis.scheduled.loaders.UrlHausLinkDataLoader;
+import java.time.Duration;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.ansaf.shouldiclickthis.constant.RedisConstant.*;
 @Component
 @Slf4j
 public class DataFetcher {
+  private final TaskScheduler taskScheduler;
 
-    @Autowired
-    private RedisService redisService;
+  public DataFetcher(TaskScheduler taskScheduler,
+      PhishingDbDomainDataLoader phishingDbDomainDataLoader,
+      PhishingDbLinkLoader phishingDbLinkLoader, OpenPhishDataLoader openPhishDataLoader,
+      IpSumDataLoader ipSumDataLoader, UrlHausLinkDataLoader urlHausLinkDataLoader,
+      UrlHausDomainDataLoader urlHausDomainDataLoader, CinsDataLoader cinsDataLoader,
+      DigitalSideLinksLoader digitalSideLinksLoader, DigitalSideIpLoader digitalSideIpLoader,
+      DigitalSideDomainLoader digitalSideDomainLoader) {
+    this.taskScheduler = taskScheduler;
+    scheduleTasks(List.of(phishingDbDomainDataLoader, phishingDbLinkLoader, openPhishDataLoader,
+        ipSumDataLoader, urlHausLinkDataLoader, urlHausDomainDataLoader, cinsDataLoader,
+        digitalSideLinksLoader, digitalSideIpLoader, digitalSideDomainLoader));
+  }
 
-    @Autowired
-    private FileService fileService;
+  private void scheduleTasks(List<AbstractDataLoader> loaders) {
+    loaders.forEach(this::scheduleTask);
+  }
 
-    @Autowired
-    private PhishingDbConfig phishingDbConfig;
-
-    @Autowired
-    private TimeService timeService;
-
-    @Autowired
-    private OpenPhishConfig openPhishConfig;
-
-
-    @Scheduled(fixedDelayString = "${phishing.db.domainsInterval}")
-    public void fetchPhishingDbDomains() {
-        try {
-            // Download the .tar.gz file
-            byte[] fileContent = fileService.loadFileContent(phishingDbConfig.getDomains());
-
-            TarArchiveInputStream ti = fileService.unzipFolder(fileContent);
-
-            TarArchiveEntry entry;
-            List<String> rows = new ArrayList<>();
-
-            while ((entry = ti.getNextEntry()) != null) {
-                rows.addAll(fileService.extractRowsFromZip(entry, ti, ".txt", "\n"));
-            }
-            redisService.saveUrlsInChunks(DOMAIN_SET, rows, phishingDbConfig.getDomainsSplit());
-            log.info("Domains loaded in set: {}", DOMAIN_SET);
-            setUpdatedTime(DOMAIN_UPDATED);
-
-        } catch (IOException e) {
-            log.error("Tar file was not unzipped: {}", e.getMessage());
-        } catch (EmptyFileFileContentException e) {
-            log.error("Tar file not loaded: {}", e.getMessage());
-        }
-        catch (DataAccessException e) {
-            log.error("Issues inserting domains into Redis: {}", e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unknown error occured while loading phishing domains: {}", e.getMessage());
-        }
-    }
-
-    @Scheduled(fixedDelayString = "${phishing.db.linksInterval}")
-    public void fetchPhishingDbLinks() {
-        try {
-            // Download the .tar.gz file
-            byte[] fileContent = fileService.loadFileContent(phishingDbConfig.getLinks());
-
-            TarArchiveInputStream ti = fileService.unzipFolder(fileContent);
-
-            TarArchiveEntry entry;
-
-            List<String> rows = new ArrayList<>();
-
-            while ((entry = ti.getNextEntry()) != null) {
-                rows.addAll(fileService.extractRowsFromZip(entry, ti, ".txt", "\n"));
-            }
-            redisService.saveUrlsInChunks(LINK_SET, rows, phishingDbConfig.getLinksSplit());
-            log.info("Links loaded in set: {}", LINK_SET);
-            setUpdatedTime(LINK_UPDATED);
-
-        } catch (IOException e) {
-            log.error("Tar file was not unzipped: {}", e.getMessage());
-        } catch (EmptyFileFileContentException e) {
-            log.error("Tar file not loaded: {}", e.getMessage());
-        }
-        catch (DataAccessException e) {
-            log.error("Issues inserting links into Redis: {}", e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unknown error occured while loading phishing domains: {}", e.getMessage());
-        }
-    }
-
-    @Scheduled(fixedDelayString = "${openphish.interval}")
-    public void fetchOpenPhishLinks() {
-        try {
-            byte[] fileContent = fileService.loadFileContent(openPhishConfig.getUrl());
-            List<String> rows = fileService.extractRowFromString(fileContent, "\n");
-            redisService.saveUrlsInChunks(OPENPHISH_SET, rows, openPhishConfig.getSplit());
-            setUpdatedTime(OPENPHISH_UPDATED);
-            log.info("File loaded from openphish");
-        }
-        catch (EmptyFileFileContentException e){
-            log.error("OpenPhish file not loaded {}", e.getMessage());
-        }
-        catch (DataAccessException e) {
-            log.error("Issues inserting links into Redis: {}", e.getMessage());
-        }
-        catch (Exception e) {
-            log.error("Unknown error occured while loading phishing domains: {}", e.getMessage());
-        }
-    }
-
-    private void setUpdatedTime(String key){
-        String currentTimeInString = timeService.getIsoFormatString(timeService.getNowTime());
-        redisService.setString(key, currentTimeInString);
+  private void scheduleTask(AbstractDataLoader loader) {
+    taskScheduler.scheduleWithFixedDelay(loader::process, Duration.ofMillis(
+        loader.getFixedTimeString()));
     }
 
 }
