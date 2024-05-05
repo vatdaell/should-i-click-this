@@ -62,6 +62,26 @@ public abstract class AbstractDataLoader {
     }
   }
 
+  protected void extractCsvTextFile(String url, int skipLines, int skipFooter,
+      HttpMethod httpMethod) {
+    try {
+      byte[] fileContent = restService.loadFileContent(url, httpMethod);
+      rows = fileService.parseAndSkipLines(fileContent, skipLines, skipFooter, "").stream()
+          .map(s -> {
+                StringBuilder result = new StringBuilder();
+                for (int i = 0; i < s.length; i++) {
+                  result.append(s[i]);
+                }
+                return result.toString();
+              }
+          ).toList();
+      log.info("File loaded from {}", loaderName);
+    } catch (EmptyFileFileContentException e) {
+      log.error("{} not loaded {}", loaderName, e.getMessage());
+    } catch (Exception e) {
+      log.error("Unknown error occurred while loading {} file: {}", loaderName, e.getMessage());
+    }
+  }
   protected void extractCsvTextFile(String url, int skipLines, int skipFooter, String delimiter,
       int col,
       HttpMethod httpMethod) {
