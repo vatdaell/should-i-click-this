@@ -31,7 +31,7 @@ public class OpenPhishDataLoader extends AbstractDataLoader {
 
   @Override
   protected void extractData() {
-    extractCsvTextFile(openPhishConfig.getUrl(), 0, 0, "", 0, GET);
+    extractCsvTextFile(openPhishConfig.getUrl(), 0, 0, GET);
   }
 
   @Override
